@@ -27,8 +27,8 @@ from pieces import *
 
 class Jeu(FenetreGrande):
 
-    def __init__(self, geometry, pseudoJoueur, **Arguments):
-        FenetreGrande.__init__(self, geometry, pseudoJoueur, **Arguments)
+    def __init__(self, master, pseudoJoueur, **Arguments):
+        FenetreGrande.__init__(self, master, pseudoJoueur, **Arguments)
 
 
         self.grille_jeu = Grille()
@@ -79,7 +79,10 @@ class Jeu(FenetreGrande):
         self.bind('<Escape>', self.pause)
         self.bind('m', self.music)
 
-        self.protocol('WM_DELETE_WINDOW', self.quitter)
+        # self.protocol n'existe que sur une racine Tk() ; self n'en est
+        # plus une (voir FenetreGrande) - on l'enregistre donc sur la
+        # racine partagée, en visant CETTE instance de Jeu.
+        self.master.protocol('WM_DELETE_WINDOW', self.quitter)
 
         self.piece_suivante=randint(1, 7)
         self.piece=eval(dico_pieces[self.piece_suivante])(self.can_jeu, self.grille_jeu)
@@ -169,22 +172,32 @@ class Jeu(FenetreGrande):
             self.flag=1
             self.jeu()
 
+    def retourAccueil(self):
+        """détruit cet écran de jeu et revient à l'accueil, dans la même
+        racine Tk partagée (import différé pour éviter un import
+        circulaire avec accueil.py, qui importe Jeu au niveau module)."""
+        from accueil import Accueil
+        root = self.master
+        joueur = nomJoueur(fichierJoueur)
+        self.destroy()
+        Accueil(master=root, texteMenus=majListe(joueur), pseudoJoueur=majEntete(joueur))
+
     def quitter(self):
         if self.flag == 1:
             self.pause('<Escape>')
 
             self.reponse = askquestion("Partie", "Voulez-vous vraiment quitter ?!")
             if self.reponse == "yes":
-                
+
                 self.StopMusic()
-                self.destroy()
+                self.retourAccueil()
             else:
                 showinfo("Partie", "Alors continuons !")
                 self.pause('<Escape>')
         else:
             showinfo("Partie", "Retour à l'accueil !")
             self.StopMusic()
-            self.destroy()
+            self.retourAccueil()
 
     def majChamps(self):
         self.canNiveau.delete(ALL)
@@ -267,17 +280,15 @@ class Jeu(FenetreGrande):
 
         if self.reponse == "yes":
             self.StopMusic()
+            root = self.master
             self.destroy()
-
-            newJeu = Jeu(geometry=geometry, pseudoJoueur=majEntete(nomJoueur(fichierJoueur)))
-            newJeu.focus_force()
-            newJeu.mainloop()
+            Jeu(master=root, pseudoJoueur=majEntete(nomJoueur(fichierJoueur)))
         else:
             showinfo("Partie", "Retour à l'accueil !")
 
             self.StopMusic()
 
-            self.destroy()
+            self.retourAccueil()
 
     def pieceSuivante(self):
         self.piece_suivante=randint(1,7)

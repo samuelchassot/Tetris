@@ -23,8 +23,13 @@ from fonctionsConnexion import *
 
 class Accueil(FenetreGrande):
 
-    def __init__(self, geometry, texteMenus, pseudoJoueur, **Arguments):
-        FenetreGrande.__init__(self, geometry, pseudoJoueur, **Arguments)
+    def __init__(self, master, texteMenus, pseudoJoueur, **Arguments):
+        FenetreGrande.__init__(self, master, pseudoJoueur, **Arguments)
+
+        # revient au comportement par défaut (fermer la fenêtre quitte
+        # l'appli) - écrase un éventuel gestionnaire laissé par un écran
+        # Jeu précédent, qui référencerait un objet maintenant détruit.
+        self.master.protocol('WM_DELETE_WINDOW', self.master.destroy)
 
         self.joueur = nomJoueur(fichierJoueur)
         self.texteMenus = texteMenus
@@ -103,15 +108,9 @@ class Accueil(FenetreGrande):
             #selon le curseur on lance le menu correspondant
             if self.menu == 0:
                 if estConnecte(self.joueur):
+                    root = self.master
                     self.destroy()
-                    jeu = Jeu(geometry=geometry, pseudoJoueur=majEntete(self.joueur))
-                    jeu.focus_force()
-                    jeu.mainloop()
-
-                    acc = Accueil(geometry=geometry,texteMenus=majListe(self.joueur),
-                            pseudoJoueur=majEntete(self.joueur))
-                    acc.focus_force()
-                    acc.mainloop()
+                    Jeu(master=root, pseudoJoueur=majEntete(self.joueur))
                 else:
                     self.peutOuvrir = False
                     Connexion(self, geometryPetite, "Connexion", "p").focus()
@@ -137,4 +136,7 @@ class Accueil(FenetreGrande):
                 MeilleursScores(self, geometryPetite, "Meilleurs Scores", "g").focus()
 
             elif self.menu == 5:
-                self.destroy()
+                # self.destroy() ne fermerait que cette Frame et
+                # laisserait la racine ouverte avec plus rien dedans -
+                # il faut détruire la racine elle-même pour quitter.
+                self.master.destroy()
