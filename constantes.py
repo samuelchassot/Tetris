@@ -9,6 +9,19 @@
 from tkinter import *
 from fonctionsConnexion import *
 
+#racine Tk unique pour toute la durée de vie de l'appli
+#########################################################
+#
+# Sur les versions récentes de Tk/Aqua (macOS), détruire une racine Tk()
+# puis en créer une nouvelle dans le même processus fait planter Tk dès
+# le premier update()/mainloop() sur la nouvelle. On ne crée donc
+# qu'UNE SEULE racine, ici, jamais détruite avant la fin du programme -
+# tous les écrans (Accueil, Jeu, ...) s'affichent comme des Frame à
+# l'intérieur de cette même racine (voir classesModifiees.FenetreGrande)
+# au lieu d'être eux-mêmes des fenêtres Tk() qu'on détruit et recrée.
+
+root = Tk()
+
 #résolution de la fenêtre principales
 #####################################
 
@@ -16,14 +29,10 @@ def obtenirDimensions(dim):
     """obtenirDimensions(string dim) --> hauteur ou largeur de l'écran selon <dim>
     utile pour centrer la fenêtre de jeu sur les différents écrans
     """
-    fenetre = Tk()                                  #création d'une fenête invisible
     if dim == "h":
-        resultat = fenetre.winfo_screenheight()
+        return root.winfo_screenheight()
     elif dim == "l":
-        resultat = fenetre.winfo_screenwidth()
-
-    fenetre.destroy()
-    return resultat
+        return root.winfo_screenwidth()
 
 #dimensions fenêtre standard
 ############################

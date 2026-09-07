@@ -14,14 +14,22 @@ from constantes import *
 #classes modifiées
 ##################
 
-class FenetreGrande(Tk):
+class FenetreGrande(Frame):
+    """Un « écran » plein fenêtre de l'appli (Accueil, Jeu, ...).
 
-    def __init__(self, geometry, pseudoJoueur, **Arguments):
-        Tk.__init__(self, **Arguments)
-        self.geometry(geometry)
-        self.resizable(width=FALSE, height=FALSE)
-        self.title(pseudoJoueur)
-        self.tk_setPalette(background="light sky blue", foreground="black")
+    N'est PLUS une racine Tk() (contrairement à l'ancienne version) :
+    c'est une Frame affichée à l'intérieur de la racine Tk unique et
+    persistante `master` (voir constantes.root / tetris.py), qu'on peut
+    détruire et recréer librement d'un écran à l'autre sans jamais
+    toucher à la racine elle-même - c'est cette dernière qui plantait
+    Tk sur macOS si on la détruisait puis en recréait une nouvelle.
+    """
+
+    def __init__(self, master, pseudoJoueur, **Arguments):
+        Frame.__init__(self, master, **Arguments)
+        self.master.title(pseudoJoueur)
+        self.pack(fill=BOTH, expand=True)
+        self.focus_set()
 
 class FenetrePetite(Toplevel):
 

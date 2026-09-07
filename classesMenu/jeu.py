@@ -17,6 +17,7 @@ sys.path.insert(0, "..")
 from constantes import *
 from fonctionsConnexion import *
 from requetes import *
+from touch_controls import TouchControls
 
 #import winsound
 
@@ -27,8 +28,8 @@ from pieces import *
 
 class Jeu(FenetreGrande):
 
-    def __init__(self, geometry, pseudoJoueur, **Arguments):
-        FenetreGrande.__init__(self, geometry, pseudoJoueur, **Arguments)
+    def __init__(self, master, pseudoJoueur, **Arguments):
+        FenetreGrande.__init__(self, master, pseudoJoueur, **Arguments)
 
 
         self.grille_jeu = Grille()
@@ -79,7 +80,10 @@ class Jeu(FenetreGrande):
         self.bind('<Escape>', self.pause)
         self.bind('m', self.music)
 
-        self.protocol('WM_DELETE_WINDOW', self.quitter)
+        # self.protocol n'existe que sur une racine Tk() ; self n'en est
+        # plus une (voir FenetreGrande) - on l'enregistre donc sur la
+        # racine partagée, en visant CETTE instance de Jeu.
+        self.master.protocol('WM_DELETE_WINDOW', self.quitter)
 
         self.piece_suivante=randint(1, 7)
         self.piece=eval(dico_pieces[self.piece_suivante])(self.can_jeu, self.grille_jeu)
@@ -92,7 +96,29 @@ class Jeu(FenetreGrande):
         for i in range(2):
             self.piece_attente.descente()
 
-
+        # Overlay tactile façon émulateur : croix directionnelle en bas à
+        # gauche, boutons A/B/X/Y en bas à droite, tous deux superposés
+        # sur le plateau de jeu lui-même. Le mapping par défaut (voir
+        # touch_controls.py) simule les touches déjà utilisées plus haut
+        # (Left/Right/Up/Down/space/Escape/m) - aucune autre modification
+        # du jeu n'est nécessaire pour que ça marche.
+        #
+        # Tailles réduites pour tenir dans le plateau de 251x550px actuel
+        # (voir constantes.py) - à retoucher si la fenêtre change.
+        touch_button_size = 16
+        touch_margin_x = 30
+        touch_margin_bottom = 35
+        self.touch = TouchControls(target=self)
+        self.touch.add_dpad(
+            self.can_jeu,
+            center=(touch_margin_x, hauteur_canevas - touch_margin_bottom),
+            button_size=touch_button_size, gap=3,
+        )
+        self.touch.add_face_buttons(
+            self.can_jeu,
+            center=(largeur_canevas - touch_margin_x, hauteur_canevas - touch_margin_bottom),
+            button_size=touch_button_size, gap=5,
+        )
 
         self.jeu()
 
@@ -159,6 +185,11 @@ class Jeu(FenetreGrande):
             self.cachePetit = self.can_piece.create_rectangle(1,1, largeurCanPieces+2, hauteurCanPieces+2, fill="black")
             self.pauseI = self.can_jeu.create_rectangle(100, 250, 120, 300, fill="light grey")
             self.pauseII = self.can_jeu.create_rectangle(130, 250, 150, 300, fill="light grey")
+            # le cache de pause vient d'être posé par-dessus l'overlay
+            # tactile sans effacer le canvas (pas de delete(ALL) ici) -
+            # il faut le remonter au-dessus pour pouvoir encore toucher B
+            # et sortir de la pause.
+            self.touch.raise_all()
             self.flag=0
 
         elif self.flag==0:
@@ -169,22 +200,32 @@ class Jeu(FenetreGrande):
             self.flag=1
             self.jeu()
 
+    def retourAccueil(self):
+        """détruit cet écran de jeu et revient à l'accueil, dans la même
+        racine Tk partagée (import différé pour éviter un import
+        circulaire avec accueil.py, qui importe Jeu au niveau module)."""
+        from accueil import Accueil
+        root = self.master
+        joueur = nomJoueur(fichierJoueur)
+        self.destroy()
+        Accueil(master=root, texteMenus=majListe(joueur), pseudoJoueur=majEntete(joueur))
+
     def quitter(self):
         if self.flag == 1:
             self.pause('<Escape>')
 
             self.reponse = askquestion("Partie", "Voulez-vous vraiment quitter ?!")
             if self.reponse == "yes":
-                
+
                 self.StopMusic()
-                self.destroy()
+                self.retourAccueil()
             else:
                 showinfo("Partie", "Alors continuons !")
                 self.pause('<Escape>')
         else:
             showinfo("Partie", "Retour à l'accueil !")
             self.StopMusic()
-            self.destroy()
+            self.retourAccueil()
 
     def majChamps(self):
         self.canNiveau.delete(ALL)
@@ -223,6 +264,10 @@ class Jeu(FenetreGrande):
 
         self.grille_jeu.afficher(self.can_jeu)
         self.piece=eval(dico_pieces[self.piece_suivante])(self.can_jeu,self.grille_jeu)
+
+        # can_jeu.delete(ALL) plus haut a aussi effacé l'overlay tactile
+        # (croix + A/B/X/Y) en même temps que le plateau - le recréer ici.
+        self.touch.redraw()
 
         self.majChamps()
 
@@ -267,17 +312,15 @@ class Jeu(FenetreGrande):
 
         if self.reponse == "yes":
             self.StopMusic()
+            root = self.master
             self.destroy()
-
-            newJeu = Jeu(geometry=geometry, pseudoJoueur=majEntete(nomJoueur(fichierJoueur)))
-            newJeu.focus_force()
-            newJeu.mainloop()
+            Jeu(master=root, pseudoJoueur=majEntete(nomJoueur(fichierJoueur)))
         else:
             showinfo("Partie", "Retour à l'accueil !")
 
             self.StopMusic()
 
-            self.destroy()
+            self.retourAccueil()
 
     def pieceSuivante(self):
         self.piece_suivante=randint(1,7)

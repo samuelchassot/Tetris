@@ -33,5 +33,16 @@ deconnexion(fichierJoueur)                              #déconnexion du joueur 
 
 joueur = nomJoueur(fichierJoueur)                       #connexion du joueur (aucun joueur)
 
-Accueil(geometry=geometry,texteMenus=majListe(joueur),  #création de l'Accueil
-        pseudoJoueur=majEntete(joueur)).mainloop()
+# `root` (une seule racine Tk pour toute la durée de vie de l'appli) est
+# créée dans constantes.py - voir le commentaire là-bas. On la configure
+# ici une bonne fois pour toutes, puis chaque écran (Accueil, Jeu, ...)
+# s'affiche comme une Frame à l'intérieur, sans jamais recréer de racine.
+root.geometry(geometry)
+root.resizable(width=FALSE, height=FALSE)
+root.tk_setPalette(background="light sky blue", foreground="black")
+root.protocol('WM_DELETE_WINDOW', root.destroy)
+
+Accueil(master=root, texteMenus=majListe(joueur),       #création de l'Accueil
+        pseudoJoueur=majEntete(joueur))
+
+root.mainloop()
