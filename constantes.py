@@ -28,33 +28,38 @@ root = Tk()
 
 def obtenirDimensions(dim):
     """obtenirDimensions(string dim) --> hauteur ou largeur de l'écran selon <dim>
-    utile pour centrer la fenêtre de jeu sur les différents écrans
+    utile pour centrer les fenêtres secondaires sur l'écran
     """
     if dim == "h":
         return root.winfo_screenheight()
     elif dim == "l":
         return root.winfo_screenwidth()
+    raise ValueError("dim must be 'h' or 'l', got {!r}".format(dim))
 
-#dimensions fenêtre standard
-############################
+#dimensions du contenu du jeu
+##############################
+#
+# La fenêtre principale (root) tourne maintenant en plein écran (voir
+# tetris.py) - hauteur/largeur ne dimensionnent donc plus une fenêtre
+# mais juste le contenu (Accueil, Jeu), centré dans cet écran (voir
+# FenetreGrande dans classesModifiees.py).
 
 hauteur = 570
 largeur = 480
 
-#estimation de la meilleure position de la fenêtre
-##################################################
-
-hauteurCoin = int((obtenirDimensions("h")-hauteur)/10)
-largeurCoin = int((obtenirDimensions("l")-largeur)/3)
-
-geometry = "{}x{}+{}+{}".format(largeur, hauteur, largeurCoin, hauteurCoin)
-
 #résolution de la fenêtre secondaire
 ####################################
+#
+# Les fenêtres secondaires (Connexion, Inscription, Règles, ...) restent
+# des vraies fenêtres Toplevel, indépendantes du plein écran - centrées
+# directement sur l'écran plutôt que positionnées relativement à
+# l'ancienne fenêtre principale (qui n'existe plus en tant que telle).
 
 largeur_fenetrePetite = 250
 hauteur_fenetrePetite = 300
-geometryPetite = "{}x{}+{}+{}".format(largeur_fenetrePetite, hauteur_fenetrePetite, largeurCoin+largeur+5, hauteurCoin)
+largeurCoinPetite = int((obtenirDimensions("l") - largeur_fenetrePetite) / 2)
+hauteurCoinPetite = int((obtenirDimensions("h") - hauteur_fenetrePetite) / 2)
+geometryPetite = "{}x{}+{}+{}".format(largeur_fenetrePetite, hauteur_fenetrePetite, largeurCoinPetite, hauteurCoinPetite)
 
 #résolution du jeu
 ##################

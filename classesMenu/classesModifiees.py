@@ -28,7 +28,10 @@ class FenetreGrande(Frame):
     def __init__(self, master, pseudoJoueur, **Arguments):
         Frame.__init__(self, master, **Arguments)
         self.master.title(pseudoJoueur)
-        self.pack(fill=BOTH, expand=True)
+        # root tourne en plein écran (voir tetris.py) - on centre donc le
+        # contenu (taille naturelle, non étirée) au milieu de l'écran au
+        # lieu de le faire remplir toute la fenêtre.
+        self.place(relx=0.5, rely=0.5, anchor=CENTER)
         self.focus_set()
 
 class FenetrePetite(Toplevel):
