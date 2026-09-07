@@ -14,6 +14,7 @@ sys.path.insert(0, "..")
 
 from requetes import *
 from constantes import *
+from touch_keyboard import bind_entry
 
 class Connexion(FenetrePetite):
 
@@ -23,10 +24,12 @@ class Connexion(FenetrePetite):
         self.pseudoLabel = Label(self, text="Pseudo ", font=("Helvetica", 10)).pack(side=TOP)
         self.pseudoChamps = Entry(self, font=("Helvetica", 10))
         self.pseudoChamps.pack(side=TOP)
+        bind_entry(self.pseudoChamps)
 
         self.motDePasseLabel = Label(self, text="Mot de passe", font=("Helvetica", 10)).pack(side=TOP)
         self.motDePasseChamps = Entry(self, show="*", font=("Helvetica", 10))
         self.motDePasseChamps.pack(side=TOP)
+        bind_entry(self.motDePasseChamps)
 
         self.connexioneBtn = Button(self, text="Se connecter", command=self.connexion, font=("Helvetica", 10)).pack(side=TOP, pady=30)
 

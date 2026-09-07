@@ -20,6 +20,17 @@ sys.path.insert(0, "..")
 
 from constantes import *
 from fonctionsConnexion import *
+from touch_controls import TouchControls
+
+# Sur ce menu, seul le bouton A a un sens (valider l'entrée
+# sélectionnée, comme <Return>) - B/X/Y sont dessinés pour la cohérence
+# visuelle avec l'écran de jeu mais ne déclenchent rien (keysym=None).
+_ACCUEIL_FACE_KEYMAP = {
+    'a': ('Return', 'once'),
+    'b': (None, None),
+    'x': (None, None),
+    'y': (None, None),
+}
 
 class Accueil(FenetreGrande):
 
@@ -60,7 +71,26 @@ class Accueil(FenetreGrande):
         self.bind('<Down>', self.descendreCurseur)
         self.bind('<Up>', self.monterCurseur)
         self.bind('<Return>', self.menu)
-        self.bind('<Button-1>', self.alerte)
+
+        # Overlay tactile : la croix directionnelle simule directement
+        # <Up>/<Down> (déjà branchés ci-dessus, aucun mapping custom
+        # nécessaire), le bouton A valide l'entrée sélectionnée comme le
+        # ferait <Return> - voir _ACCUEIL_FACE_KEYMAP en tête de fichier.
+        touch_button_size = 16
+        touch_margin_x = 30
+        touch_margin_bottom = 35
+        self.touch = TouchControls(target=self)
+        self.touch.add_dpad(
+            self.canMenu,
+            center=(touch_margin_x, (hauteur - 130) - touch_margin_bottom),
+            button_size=touch_button_size, gap=3,
+        )
+        self.touch.add_face_buttons(
+            self.canMenu,
+            center=(largeur - touch_margin_x, (hauteur - 130) - touch_margin_bottom),
+            keymap=_ACCUEIL_FACE_KEYMAP,
+            button_size=touch_button_size, gap=5,
+        )
 
     def descendreCurseur(self, event):
         """descend le curseur de 1 dans le menu"""
@@ -81,10 +111,6 @@ class Accueil(FenetreGrande):
             self.ligneCurseur = len(self.texteMenus)
         self.curseur.grid(row=self.ligneCurseur, column=0)
         self.curseur.update()
-
-    def alerte(self, event):
-        """affiche une pop up indiquant d'utiliser le clavier"""
-        showinfo("Matériel", "Les flèches du clavier sont plus utiles que la souris ! (Et ça fait pro ;) )")
 
     def majContenu(self):
         """mets à jour les possibilitées de menus selon la connexion"""

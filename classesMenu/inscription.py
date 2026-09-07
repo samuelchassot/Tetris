@@ -15,6 +15,7 @@ sys.path.insert(0, "..")
 from constantes import *
 from fonctionsConnexion import *
 from requetes import *
+from touch_keyboard import bind_entry
 
 class Inscription(FenetrePetite):
 
@@ -26,14 +27,17 @@ class Inscription(FenetrePetite):
         self.pseudoLabel = Label(self, text="Pseudo ", font=("Helvetica", 10)).pack(side=TOP)
         self.pseudoChamps = Entry(self, font=("Helvetica", 10))
         self.pseudoChamps.pack(side=TOP)
+        bind_entry(self.pseudoChamps)
 
         self.motDePasseLabel = Label(self, text="Mot de passe", font=("Helvetica", 10)).pack(side=TOP)
         self.motDePasseChamps = Entry(self, show="*", font=("Helvetica", 10))
         self.motDePasseChamps.pack(side=TOP)
+        bind_entry(self.motDePasseChamps)
 
         self.ConfMotDePasseLabel = Label(self, text="Confirmer mot de passe", font=("Helvetica", 10)).pack(side=TOP)
         self.ConfMotDePasseChamps = Entry(self, show="*", font=("Helvetica", 10))
         self.ConfMotDePasseChamps.pack(side=TOP)
+        bind_entry(self.ConfMotDePasseChamps)
 
         self.inscrireBtn = Button(self, text="S'inscrire", command=self.inscription, font=("Helvetica", 10))
         self.inscrireBtn.pack(side=TOP, pady=30)
