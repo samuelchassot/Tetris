@@ -103,21 +103,27 @@ class Jeu(FenetreGrande):
         # (Left/Right/Up/Down/space/Escape/m) - aucune autre modification
         # du jeu n'est nécessaire pour que ça marche.
         #
-        # Tailles réduites pour tenir dans le plateau de 251x550px actuel
-        # (voir constantes.py) - à retoucher si la fenêtre change.
-        touch_button_size = 16
-        touch_margin_x = 30
-        touch_margin_bottom = 35
+        # Taille choisie pour rester touchable au doigt tout en tenant
+        # sur les deux côtés du plateau de 251x550px actuel (voir
+        # constantes.py) sans que la croix et les boutons A/B/X/Y se
+        # chevauchent : avec button_size=30/gap=6, chaque groupe occupe
+        # une largeur de 2*(1.5*30+6)=102px : à margin_x=52 la croix
+        # va de x=1 à x=103 et les boutons de x=148 à x=250, avec 45px
+        # d'écart entre les deux - à retoucher si la fenêtre change.
+        touch_button_size = 30
+        touch_gap = 6
+        touch_margin_x = 52
+        touch_margin_bottom = 60
         self.touch = TouchControls(target=self)
         self.touch.add_dpad(
             self.can_jeu,
             center=(touch_margin_x, hauteur_canevas - touch_margin_bottom),
-            button_size=touch_button_size, gap=3,
+            button_size=touch_button_size, gap=touch_gap,
         )
         self.touch.add_face_buttons(
             self.can_jeu,
             center=(largeur_canevas - touch_margin_x, hauteur_canevas - touch_margin_bottom),
-            button_size=touch_button_size, gap=5,
+            button_size=touch_button_size, gap=touch_gap,
         )
 
         self.jeu()

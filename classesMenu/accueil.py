@@ -76,20 +76,25 @@ class Accueil(FenetreGrande):
         # <Up>/<Down> (déjà branchés ci-dessus, aucun mapping custom
         # nécessaire), le bouton A valide l'entrée sélectionnée comme le
         # ferait <Return> - voir _ACCUEIL_FACE_KEYMAP en tête de fichier.
-        touch_button_size = 16
-        touch_margin_x = 30
-        touch_margin_bottom = 35
+        # Mêmes dimensions que sur l'écran de jeu (voir jeu.py) pour une
+        # taille de bouton cohérente d'un écran à l'autre - canMenu est
+        # nettement plus large (480px) que le plateau de jeu (251px),
+        # donc largement assez de place ici.
+        touch_button_size = 30
+        touch_gap = 6
+        touch_margin_x = 52
+        touch_margin_bottom = 60
         self.touch = TouchControls(target=self)
         self.touch.add_dpad(
             self.canMenu,
             center=(touch_margin_x, (hauteur - 130) - touch_margin_bottom),
-            button_size=touch_button_size, gap=3,
+            button_size=touch_button_size, gap=touch_gap,
         )
         self.touch.add_face_buttons(
             self.canMenu,
             center=(largeur - touch_margin_x, (hauteur - 130) - touch_margin_bottom),
             keymap=_ACCUEIL_FACE_KEYMAP,
-            button_size=touch_button_size, gap=5,
+            button_size=touch_button_size, gap=touch_gap,
         )
 
     def descendreCurseur(self, event):
