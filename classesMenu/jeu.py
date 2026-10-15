@@ -7,7 +7,20 @@
 from tkinter import *
 from tkinter.messagebox import *
 from random import randint
+import json
+import os
 import time
+
+# Trace recording: write a clock-compatible piece trace to this path when the
+# game ends so the clock can offer to keep it as a transition animation.
+_TRACE_DIR = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "res", "tetris_traces"
+))
+_TRACE_PENDING = os.path.join(_TRACE_DIR, ".pending_trace.json")
+_KIND_MAP = {
+    'Te': 'T', 'Barre': 'I', 'Lambda': 'L',
+    'Carre': 'O', 'Gamma': 'J', 'S': 'S', 'Z': 'Z',
+}
 
 from classesModifiees import FenetreGrande
 
@@ -33,6 +46,8 @@ class Jeu(FenetreGrande):
 
         self.grille_jeu = Grille()
         self.flag= 1
+        self._trace: list = []
+        self._moves_log: list = []
 
         self.flagMusique=1
 
@@ -146,14 +161,17 @@ class Jeu(FenetreGrande):
 
     def laterald(self, event):
         if self.flag == 1:
+            self._moves_log.append(['right', self.piece.carre_ref_ligne])
             self.piece.lateral('d')
 
     def lateralg(self, event):
         if self.flag == 1:
+            self._moves_log.append(['left', self.piece.carre_ref_ligne])
             self.piece.lateral('g')
 
     def tourner(self, event):
         if self.flag == 1:
+            self._moves_log.append(['rotate', self.piece.carre_ref_ligne])
             self.piece.tourner()
 
     def pause(self, event):
@@ -190,6 +208,7 @@ class Jeu(FenetreGrande):
             if self.reponse == "yes":
 
                 self.StopMusic()
+                self._save_trace()
                 self.retourAccueil()
             else:
                 showinfo("Partie", "Alors continuons !")
@@ -197,6 +216,7 @@ class Jeu(FenetreGrande):
         else:
             showinfo("Partie", "Retour à l'accueil !")
             self.StopMusic()
+            self._save_trace()
             self.retourAccueil()
 
     def majChamps(self):
@@ -214,6 +234,10 @@ class Jeu(FenetreGrande):
         self.txtGameOver = self.can_jeu.create_text(largeur_canevas//2, 75, text="GAME OVER", justify="center", font=('Helvetica', 20), fill="white")
 
     def majCanevas(self):
+        kind = _KIND_MAP.get(type(self.piece).__name__, 'T')
+        scaled = [[a, min(9, round(h * 10 / 22))] for a, h in self._moves_log]
+        self._trace.append({'kind': kind, 'moves': scaled})
+        self._moves_log = []
         self.piece.fixer()
         self.grille_jeu.enleve_ligne_pleine()
 
@@ -255,10 +279,21 @@ class Jeu(FenetreGrande):
         deconnexionDB(conn, cur)
 
 
+    def _save_trace(self):
+        if not self._trace:
+            return
+        try:
+            os.makedirs(_TRACE_DIR, exist_ok=True)
+            with open(_TRACE_PENDING, 'w') as f:
+                json.dump({'rows': 10, 'cols': 11, 'pieces': self._trace}, f, indent=2)
+        except Exception as e:
+            print(f"WARNING: could not save tetris trace: {e}")
+
     def partiFinie(self):
         self.flag = 0
 
         self.gameOver()
+        self._save_trace()
         if self.grille_jeu.lignes == 0:
             self.negALarrache = "n'"
             self.txtALarrache = "aucune ligne"
@@ -301,6 +336,7 @@ class Jeu(FenetreGrande):
             self.piece_attente.descente()
 
     def descenteDirecte(self, event):
+        self._moves_log.append(['drop', self.piece.carre_ref_ligne])
         while self.piece.check_descente():
             self.piece.descente_noview()
 
