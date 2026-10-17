@@ -48,6 +48,8 @@ class FenetrePetite(Toplevel):
         # resizable() resets geometry to 200x200 when combined with
         # overrideredirect — skip it (no resize handles exist anyway).
         # WM_DELETE_WINDOW is a no-op on overrideredirect windows.
+        self.configure(highlightbackground="navy", highlightcolor="navy",
+                       highlightthickness=3)
         self.lift()
         self.focus_force()
 

@@ -98,7 +98,7 @@ class Accueil(FenetreGrande):
             self.texteMenus[menu] = Label(master=self.canMenu, text=self.texteMenus[menu], font=('Helvetica', 20))
             self.texteMenus[menu].grid(row=menu+1, column=1, pady=10, sticky=W)
 
-        self.title(majEntete(self.joueur))
+        self.master.title(majEntete(self.joueur))
 
     def menu(self, event):
         self.menu = self.ligneCurseur-1
