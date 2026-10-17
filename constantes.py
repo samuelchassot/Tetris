@@ -24,9 +24,9 @@ from fonctionsConnexion import *
 root = Tk()
 
 # On X11 the root uses overrideredirect(True) (see tetris.py) which bypasses
-# the window manager. WM-managed Toplevel windows (sub-screens, messagebox
-# dialogs) would normally appear behind it. Patch Toplevel.__init__ so every
-# new Toplevel lifts itself above the fullscreen root and requests WM topmost.
+# the window manager. All secondary windows (FenetrePetite, dialogs) must also
+# use overrideredirect so they live in the same X11 stack layer and lift() works.
+# Patch Toplevel.__init__ to auto-lift every new Toplevel as a safety net.
 _orig_toplevel_init = Toplevel.__init__
 
 def _toplevel_init_autolift(self, master=None, **kw):
@@ -35,12 +35,86 @@ def _toplevel_init_autolift(self, master=None, **kw):
     def _lift():
         try:
             widget.lift()
-            widget.attributes('-topmost', True)
         except Exception:
             pass
     self.after(1, _lift)
 
 Toplevel.__init__ = _toplevel_init_autolift
+
+
+def _overrideredirect_dialog(title, message, buttons):
+    """Modal dialog using overrideredirect — visible above the fullscreen root
+    and FenetrePetite on X11/Raspberry Pi.
+
+    buttons: list of (label, return_value) pairs; first is the default (Return key).
+    """
+    prev_focus = root.focus_get()
+    result = [None]
+
+    dlg = Toplevel()
+    dlg.overrideredirect(True)
+    dlg_w, dlg_h = 340, 170
+    x = (root.winfo_screenwidth() - dlg_w) // 2
+    y = (root.winfo_screenheight() - dlg_h) // 2
+    dlg.geometry("{}x{}+{}+{}".format(dlg_w, dlg_h, x, y))
+    dlg.configure(relief=RIDGE, borderwidth=3)
+    dlg.lift()
+
+    Label(dlg, text=title, font=("Helvetica", 13, "bold"), pady=8).pack()
+    Label(dlg, text=message, font=("Helvetica", 10),
+          wraplength=300, justify=CENTER, pady=4).pack(padx=10)
+
+    btn_frame = Frame(dlg)
+    btn_frame.pack(pady=12)
+
+    def close(value):
+        result[0] = value
+        try:
+            dlg.grab_release()
+        except Exception:
+            pass
+        dlg.destroy()
+        try:
+            if prev_focus and prev_focus.winfo_exists():
+                prev_focus.focus_force()
+        except Exception:
+            pass
+
+    for label, value in buttons:
+        Button(btn_frame, text=label, width=8,
+               command=lambda v=value: close(v)).pack(side=LEFT, padx=8)
+
+    dlg.bind('<Return>', lambda e: close(buttons[0][1]))
+    dlg.bind('<space>',  lambda e: close(buttons[0][1]))
+    if len(buttons) > 1:
+        dlg.bind('<Escape>', lambda e: close(buttons[-1][1]))
+        dlg.bind('n', lambda e: close(buttons[-1][1]))
+        dlg.bind('N', lambda e: close(buttons[-1][1]))
+    else:
+        dlg.bind('<Escape>', lambda e: close(buttons[0][1]))
+
+    dlg.grab_set()
+    dlg.focus_force()
+    dlg.wait_window()
+    return result[0]
+
+
+# These shadow tkinter.messagebox.show*/askquestion everywhere that does
+# "from tkinter.messagebox import *" followed by "from constantes import *".
+def showinfo(title=None, message=None, **kw):
+    _overrideredirect_dialog(title or "", message or "", [("OK", "ok")])
+
+def showwarning(title=None, message=None, **kw):
+    _overrideredirect_dialog(title or "", message or "", [("OK", "ok")])
+
+def showerror(title=None, message=None, **kw):
+    _overrideredirect_dialog(title or "", message or "", [("OK", "ok")])
+
+def askquestion(title=None, message=None, **kw):
+    return _overrideredirect_dialog(
+        title or "", message or "",
+        [("Oui", "yes"), ("Non", "no")]
+    )
 
 #résolution de la fenêtre principales
 #####################################
