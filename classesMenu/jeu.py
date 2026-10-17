@@ -16,7 +16,14 @@ import time
 _TRACE_DIR = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "res", "tetris_traces"
 ))
-_TRACE_PENDING = os.path.join(_TRACE_DIR, ".pending_trace.json")
+def _next_pending_path() -> str:
+    os.makedirs(_TRACE_DIR, exist_ok=True)
+    idx = 1
+    while True:
+        p = os.path.join(_TRACE_DIR, f".pending_{idx:03d}.json")
+        if not os.path.exists(p):
+            return p
+        idx += 1
 _KIND_MAP = {
     'Te': 'T', 'Barre': 'I', 'Lambda': 'L',
     'Carre': 'O', 'Gamma': 'J', 'S': 'S', 'Z': 'Z',
@@ -283,9 +290,10 @@ class Jeu(FenetreGrande):
         if not self._trace:
             return
         try:
-            os.makedirs(_TRACE_DIR, exist_ok=True)
-            with open(_TRACE_PENDING, 'w') as f:
+            path = _next_pending_path()
+            with open(path, 'w') as f:
                 json.dump({'rows': 10, 'cols': 11, 'pieces': self._trace}, f, indent=2)
+            self._trace = []
         except Exception as e:
             print(f"WARNING: could not save tetris trace: {e}")
 
