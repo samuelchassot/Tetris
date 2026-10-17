@@ -38,12 +38,17 @@ class FenetrePetite(Toplevel):
 
     def __init__(self, parent, geometryPetite, titre, gridOuPack, **Arguments):
         Toplevel.__init__(self, parent, **Arguments)
+        # Use overrideredirect so this window is in the same X11 layer as the
+        # fullscreen root (which also uses overrideredirect). Without this,
+        # WM-managed Toplevels stay below the override-redirect root regardless
+        # of lift() calls. Side effects: no title bar, no WM close button —
+        # both are handled via the <Escape> binding below.
+        self.overrideredirect(True)
         self.geometry(geometryPetite)
-        self.resizable(width=FALSE, height=FALSE)
-        self.protocol('WM_DELETE_WINDOW', self.quitter)
-        # Ensure visibility above the overrideredirect fullscreen root on X11.
+        # resizable() resets geometry to 200x200 when combined with
+        # overrideredirect — skip it (no resize handles exist anyway).
+        # WM_DELETE_WINDOW is a no-op on overrideredirect windows.
         self.lift()
-        self.attributes('-topmost', True)
         self.focus_force()
 
         self.parent = parent
@@ -54,6 +59,14 @@ class FenetrePetite(Toplevel):
             Label(self, text=titre, font=("Helvetica", 20)).grid(column=1, row=1, columnspan=2)
         else:
             Label(self, text=titre, font=("Helvetica", 20)).pack(side=TOP, pady=10)
+
+    def destroy(self):
+        """Return keyboard focus to parent before tearing down the window."""
+        try:
+            self.parent.focus_force()
+        except Exception:
+            pass
+        super().destroy()
 
     def quitter(self, event=None):
         """fonction destroy modifiée pour remettre peutOuvrir à true quand on ferme une fenêtre satellite"""
