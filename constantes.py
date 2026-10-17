@@ -23,6 +23,25 @@ from fonctionsConnexion import *
 
 root = Tk()
 
+# On X11 the root uses overrideredirect(True) (see tetris.py) which bypasses
+# the window manager. WM-managed Toplevel windows (sub-screens, messagebox
+# dialogs) would normally appear behind it. Patch Toplevel.__init__ so every
+# new Toplevel lifts itself above the fullscreen root and requests WM topmost.
+_orig_toplevel_init = Toplevel.__init__
+
+def _toplevel_init_autolift(self, master=None, **kw):
+    _orig_toplevel_init(self, master, **kw)
+    widget = self
+    def _lift():
+        try:
+            widget.lift()
+            widget.attributes('-topmost', True)
+        except Exception:
+            pass
+    self.after(1, _lift)
+
+Toplevel.__init__ = _toplevel_init_autolift
+
 #résolution de la fenêtre principales
 #####################################
 

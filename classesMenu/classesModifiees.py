@@ -41,6 +41,10 @@ class FenetrePetite(Toplevel):
         self.geometry(geometryPetite)
         self.resizable(width=FALSE, height=FALSE)
         self.protocol('WM_DELETE_WINDOW', self.quitter)
+        # Ensure visibility above the overrideredirect fullscreen root on X11.
+        self.lift()
+        self.attributes('-topmost', True)
+        self.focus_force()
 
         self.parent = parent
         self.bind('<Escape>', self.quitter)
