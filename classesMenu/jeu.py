@@ -16,11 +16,11 @@ import time
 _TRACE_DIR = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "res", "tetris_traces"
 ))
-def _next_pending_path() -> str:
+def _next_trace_path() -> str:
     os.makedirs(_TRACE_DIR, exist_ok=True)
     idx = 1
     while True:
-        p = os.path.join(_TRACE_DIR, f".pending_{idx:03d}.json")
+        p = os.path.join(_TRACE_DIR, f"trace_{idx:03d}.json")
         if not os.path.exists(p):
             return p
         idx += 1
@@ -290,7 +290,7 @@ class Jeu(FenetreGrande):
         if not self._trace:
             return
         try:
-            path = _next_pending_path()
+            path = _next_trace_path()
             with open(path, 'w') as f:
                 json.dump({'rows': 10, 'cols': 11, 'pieces': self._trace}, f, indent=2)
             self._trace = []
